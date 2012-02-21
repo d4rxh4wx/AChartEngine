@@ -94,12 +94,12 @@ public class Zoom extends AbstractTool {
           }
         } else {
           if (mRenderer.isZoomXEnabled()) {
-            if (limitsReachedX) {
+            if (!limitsReachedX) {
               newWidth *= mZoomRate;
             }
           }
           if (mRenderer.isZoomYEnabled()) {
-            if (limitsReachedY) {
+            if (!limitsReachedY) {
               newHeight *= mZoomRate;
             }
           }
