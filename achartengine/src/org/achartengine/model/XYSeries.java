@@ -17,7 +17,6 @@ package org.achartengine.model;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.List;
 import java.util.SortedMap;
 
 import org.achartengine.util.IndexXYMap;
@@ -149,13 +148,6 @@ public class XYSeries implements Serializable {
     initRange();
   }
 
-  public synchronized void setXY(List<PointD> points) {
-    clear();
-    for (PointD point : points) {
-      mXY.put(point.x, point.y);
-    }
-  }
-
   /**
    * Returns the X axis value at the specified index.
    * 
@@ -214,7 +206,7 @@ public class XYSeries implements Serializable {
   public int getIndexForKey(double key) {
     return mXY.getIndexForKey(key);
   }
-
+  
   /**
    * Returns the series item count.
    * 
