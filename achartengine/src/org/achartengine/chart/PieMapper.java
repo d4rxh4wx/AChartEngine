@@ -115,7 +115,7 @@ public class PieMapper implements Serializable {
       for (PieSegment pieSeg : mPieSegmentList) {
         if (pieSeg.isInSegment(angleFromPieCenter)) {
           return new SeriesSelection(0, pieSeg.getDataIndex(), pieSeg.getValue(),
-              pieSeg.getValue());
+              pieSeg.getValue(), 0, 0);
         }
       }
     }
