@@ -71,6 +71,10 @@ public abstract class XYChart extends AbstractChart {
    * and the RectF list index is the point index in that series.
    */
   private Map<Integer, List<ClickableArea>> clickableAreas = new HashMap<Integer, List<ClickableArea>>();
+  
+  private int step = 0;
+  private int maxCount = -1;
+  private int maxRangeItemSize = -1;
 
   protected XYChart() {
   }
@@ -93,6 +97,33 @@ public abstract class XYChart extends AbstractChart {
     mRenderer = renderer;
   }
 
+  @Override
+  public boolean isAnimatable() {
+	return true; // true because this chart can handle mRenderer.isAnimated()
+  }
+  
+  @Override
+  public boolean isAnimationFinished() {
+	  return step >= getMaxCount();
+  }
+  
+  @Override
+  public int getNumberOfAnimatedSteps() {
+	  return Math.max(1, getMaxCount());
+  }
+  
+  private int calculateEffectiveLength(int originalValuesLength) {
+	  int valuesLength = originalValuesLength;
+	  if (mRenderer.isAnimated() && !isAnimationFinished()) {
+    	  valuesLength = Math.min(step, originalValuesLength);
+      }
+	  return valuesLength;
+  }
+  
+  private int getMaxCount() {
+	  return maxRangeItemSize;
+  }
+  
   /**
    * The graphical representation of the XY chart.
    * 
@@ -104,6 +135,7 @@ public abstract class XYChart extends AbstractChart {
    * @param paint the paint
    */
   public void draw(Canvas canvas, int x, int y, int width, int height, Paint paint) {
+	step++;
     paint.setAntiAlias(mRenderer.isAntialiasing());
     int legendSize = getLegendSize(mRenderer, height / 5, mRenderer.getAxisTitleTextSize());
     int[] margins = mRenderer.getMargins();
@@ -223,6 +255,14 @@ public abstract class XYChart extends AbstractChart {
     // 2) We don't need random seeking, only sequential reading/writing, so
     // linked list makes sense
     clickableAreas = new HashMap<Integer, List<ClickableArea>>();
+    
+    SortedMap<Double,Double>[] ranges = new SortedMap[sLength];
+    for (int i = 0; i < sLength; i++) {
+    	XYSeries series = mDataset.getSeriesAt(i);
+    	int scale = series.getScaleNumber();
+    	ranges[i] = series.getRange(minX[scale], maxX[scale], 1);;
+    }
+    
     for (int i = 0; i < sLength; i++) {
       XYSeries series = mDataset.getSeriesAt(i);
       int scale = series.getScaleNumber();
@@ -244,10 +284,18 @@ public abstract class XYChart extends AbstractChart {
 
       clickableAreas.put(i, clickableArea);
 
-      SortedMap<Double, Double> range = series.getRange(minX[scale], maxX[scale], 1);
-      int startIndex = -1;
-
-      for (Entry<Double, Double> value : range.entrySet()) {
+      SortedMap<Double, Double> range = ranges[i];
+	  int startIndex = -1;
+      int rangeItemSize = range.entrySet().size();
+      maxRangeItemSize = Math.max(maxRangeItemSize, rangeItemSize);
+      int rangeItemEffectiveSize = calculateEffectiveLength(rangeItemSize);
+      Entry<Double, Double> value;
+      Iterator<Entry<Double, Double>> iter = range.entrySet().iterator();
+      int rangeItemPosition = 1;
+      while (iter.hasNext() && rangeItemPosition <= rangeItemEffectiveSize) {
+      //for (Entry<Double, Double> value : range.entrySet()) {
+    	value = iter.next();
+    	rangeItemPosition++;
 
         double xValue = value.getKey();
         double yValue = value.getValue();
@@ -468,6 +516,7 @@ public abstract class XYChart extends AbstractChart {
   protected void drawSeries(XYSeries series, Canvas canvas, Paint paint, List<Float> pointsList,
       SimpleSeriesRenderer seriesRenderer, float yAxisValue, int seriesIndex, Orientation or,
       int startIndex) {
+if (seriesRenderer.isDisplayChart()) {
     BasicStroke stroke = seriesRenderer.getStroke();
     Cap cap = paint.getStrokeCap();
     Join join = paint.getStrokeJoin();
@@ -504,6 +553,7 @@ public abstract class XYChart extends AbstractChart {
     if (stroke != null) {
       setStroke(cap, join, miter, style, pathEffect, paint);
     }
+}
   }
 
   private void setStroke(Cap cap, Join join, float miter, Style style, PathEffect pathEffect,

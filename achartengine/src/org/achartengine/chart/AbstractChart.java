@@ -38,6 +38,23 @@ import android.graphics.RectF;
  * An abstract class to be implemented by the chart rendering classes.
  */
 public abstract class AbstractChart implements Serializable {
+
+  /**
+   * Indicates if the chart is animatable
+   * @return if the chart is animatable
+   */
+  public boolean isAnimatable() {
+	  return false; // by default, a chart is not animatable
+  }
+  
+  public boolean isAnimationFinished() {
+	  return true;
+  }
+  
+  public int getNumberOfAnimatedSteps() {
+	  return 1;
+  }
+	
   /**
    * The graphical representation of the chart.
    * 

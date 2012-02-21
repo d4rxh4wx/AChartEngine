@@ -103,6 +103,12 @@ public class DefaultRenderer implements Serializable {
   private boolean mInScroll;
   /** The start angle for circular charts such as pie, doughnut, etc. */
   private float mStartAngle = 0;
+  
+  /** renderer animated **/
+  private boolean mAnimated = false;
+  
+  /** animation delay in milliseconds **/
+  private long mDelayAnimation = 5;
 
   /**
    * Returns the chart title.
@@ -721,4 +727,20 @@ public class DefaultRenderer implements Serializable {
     mStartAngle = startAngle;
   }
 
+  public boolean isAnimated() {
+	  return mAnimated;
+  }
+  
+  public void setAnimated(boolean animated) {
+	  mAnimated = animated;
+  }
+  
+  public long getDelayAnimation() {
+	  return mDelayAnimation;
+  }
+  
+  public void setDelayAnimation(long delayMillis) {
+	  mDelayAnimation = delayMillis;
+  }
+  
 }

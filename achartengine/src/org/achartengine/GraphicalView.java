@@ -149,6 +149,17 @@ public class GraphicalView extends View {
     return null;
   }
 
+  Handler myHandler = new AnimationHandler();
+  
+  class AnimationHandler extends Handler {
+	  @Override
+	public void handleMessage(Message msg) {
+		// TODO Auto-generated method stub
+		super.handleMessage(msg);
+		invalidate();
+	}
+  }
+  
   @Override
   protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
@@ -174,6 +185,10 @@ public class GraphicalView extends View {
       canvas.drawBitmap(zoomInImage, left + width - zoomSize * 2.75f, buttonY, null);
       canvas.drawBitmap(zoomOutImage, left + width - zoomSize * 1.75f, buttonY, null);
       canvas.drawBitmap(fitZoomImage, left + width - zoomSize * 0.75f, buttonY, null);
+    }
+    long delay = mRenderer.getDelayAnimation() / (mChart.getNumberOfAnimatedSteps() * 1L);
+    if (mRenderer.isAnimated() && mChart.isAnimatable() && !mChart.isAnimationFinished()) {
+    	repaintDelayed(delay);
     }
   }
 
@@ -286,6 +301,19 @@ public class GraphicalView extends View {
       }
     }
     return super.onTouchEvent(event);
+  }
+  
+  /**
+   * Schedule a view content repaint with a delay.
+   * @param delayMillis delay in milliseconds
+   */
+  public void repaintDelayed(final long delayMillis) {
+	  
+    mHandler.postDelayed(new Runnable() {
+      public void run() {
+        invalidate();
+      }
+    }, delayMillis);
   }
 
   /**
