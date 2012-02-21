@@ -15,6 +15,9 @@
  */
 package org.achartengine;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.achartengine.chart.AbstractChart;
 import org.achartengine.chart.RoundChart;
 import org.achartengine.chart.XYChart;
@@ -125,6 +128,15 @@ public class GraphicalView extends View {
       mTouchHandler = new TouchHandler(this, mChart);
     }
   }
+  
+  public void overrideXYMarginsColor(int color) {
+		// hack du projet initial achartengine pour simuler que la zone de
+		// dessin ne s'étende pas au delà des axes des abscisses et des
+		// ordonnées
+		if (mRenderer instanceof XYMultipleSeriesRenderer) {
+			((XYMultipleSeriesRenderer) mRenderer).setMarginsColor(color);
+		}
+  }
 
   /**
    * Returns the current series selection object.
@@ -135,6 +147,14 @@ public class GraphicalView extends View {
     return mChart.getSeriesAndPointForScreenCoordinate(new Point(oldX, oldY));
   }
 
+  public List<SeriesSelection> getAllCurrentSeriesAndPoint() {
+    if (mChart instanceof XYChart) {
+      XYChart chart = (XYChart) mChart;
+      return chart.getSeriesAndPointMatchingXValue(new Point(oldX, oldY));
+    }
+    return Collections.emptyList();
+  }
+  
   /**
    * Transforms the currently selected screen point to a real point.
    * 
@@ -360,4 +380,10 @@ public class GraphicalView extends View {
     return getDrawingCache(true);
   }
 
+  public DefaultRenderer getRenderer() {
+    return mRenderer;
+  }
+
+  
+  
 }

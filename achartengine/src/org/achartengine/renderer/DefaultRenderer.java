@@ -109,7 +109,13 @@ public class DefaultRenderer implements Serializable {
   
   /** animation delay in milliseconds **/
   private long mDelayAnimation = 5;
+  
+  /** If panning is strict (on X axis OR on Y axis), or not strict (both X and Y axis) **/
+  private boolean mPanStrict = false;
 
+  /** If zooming is strict (on X axis OR on Y axis), or not strict (both X and Y axis) **/
+  private boolean mZoomStrict = false;
+  
   /**
    * Returns the chart title.
    * 
@@ -741,6 +747,22 @@ public class DefaultRenderer implements Serializable {
   
   public void setDelayAnimation(long delayMillis) {
 	  mDelayAnimation = delayMillis;
+  }
+  
+  public boolean isPanStrict() {
+	  return mPanStrict;
+  }
+  
+  public void setPanStrict(boolean panStrict) {
+	  this.mPanStrict = panStrict;
+  }
+  
+  public boolean isZoomStrict() {
+	  return mZoomStrict;
+  }
+  
+  public void setZoomStrict(boolean zoomStrict) {
+	  this.mZoomStrict = zoomStrict;
   }
   
 }

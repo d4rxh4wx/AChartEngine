@@ -47,6 +47,8 @@ public class SimpleSeriesRenderer implements Serializable {
   /** The gradient stop color. */
   private int mGradientStopColor;
   
+  private boolean mDisplayChart = true;
+  
   /**
    * Returns the series color.
    * 
@@ -223,5 +225,15 @@ public class SimpleSeriesRenderer implements Serializable {
     mGradientStopValue = start;
     mGradientStopColor = color;
   }
+
+  public boolean isDisplayChart() {
+    return mDisplayChart;
+  }
+
+  public void setDisplayChart(boolean displayChart) {
+    this.mDisplayChart = displayChart;
+  }
+  
+  
 
 }

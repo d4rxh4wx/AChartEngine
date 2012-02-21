@@ -23,12 +23,18 @@ public class SeriesSelection {
   private double mXValue;
 
   private double mValue;
+  
+  private float mX;
+  
+  private float mY;
 
-  public SeriesSelection(int seriesIndex, int pointIndex, double xValue, double value) {
+  public SeriesSelection(int seriesIndex, int pointIndex, double xValue, double value, float x, float y) {
     mSeriesIndex = seriesIndex;
     mPointIndex = pointIndex;
     mXValue = xValue;
     mValue = value;
+    mX = x;
+    mY = y;
   }
 
   public int getSeriesIndex() {
@@ -46,4 +52,14 @@ public class SeriesSelection {
   public double getValue() {
     return mValue;
   }
+
+  public float getX() {
+    return mX;
+  }
+
+  public float getY() {
+    return mY;
+  }
+	  
+  
 }

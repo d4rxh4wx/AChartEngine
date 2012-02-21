@@ -18,13 +18,16 @@ package org.achartengine.chart;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 
 /**
@@ -135,7 +138,19 @@ public class TimeChart extends LineChart {
         minX, maxX);
   }
 
-  /**
+  @Override
+  protected int getColorXLine(Double location) {
+	if (mRenderer.isShowWeekSeparator()) {
+	  GregorianCalendar cal = new GregorianCalendar();
+  	  cal.setTimeInMillis(location.longValue());
+  	  if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY) {
+  	  	return mRenderer.getWeekColor();
+  	  }
+	}
+  	return super.getColorXLine(location);   
+  }
+
+/**
    * Returns the date format pattern to be used, based on the date range.
    * 
    * @param start the start date in milliseconds

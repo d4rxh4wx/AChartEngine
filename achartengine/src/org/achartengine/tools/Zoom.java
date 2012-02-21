@@ -59,11 +59,18 @@ public class Zoom extends AbstractTool {
   public void setZoomRate(float rate) {
     mZoomRate = rate;
   }
-
+  
   /**
    * Apply the zoom.
    */
   public void apply() {
+	  apply(true, true);
+  }
+
+  /**
+   * Apply the zoom.
+   */
+  public void apply(boolean zoomXenabled, boolean zoomYenabled) {
     if (mChart instanceof XYChart) {
       int scales = mRenderer.getScalesCount();
       for (int i = 0; i < scales; i++) {
@@ -97,7 +104,8 @@ public class Zoom extends AbstractTool {
             }
           }
         }
-        if (mRenderer.isZoomXEnabled()) {
+
+        if (zoomXenabled && mRenderer.isZoomXEnabled()) {
           double newXMin = centerX - newWidth / 2;
           double newXMax = centerX + newWidth / 2;
           if (!limited || limits[0] <= newXMin && limits[1] >= newXMax) {
@@ -106,7 +114,7 @@ public class Zoom extends AbstractTool {
             limitsReachedX = true;
           }
         }
-        if (mRenderer.isZoomYEnabled()) {
+        if (zoomYenabled && mRenderer.isZoomYEnabled()) {
           double newYMin = centerY - newHeight / 2;
           double newYMax = centerY + newHeight / 2;
           if (!limited || limits[2] <= newYMin && limits[3] >= newYMax) {

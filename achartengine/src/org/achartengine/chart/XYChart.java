@@ -17,7 +17,9 @@ package org.achartengine.chart;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +73,8 @@ public abstract class XYChart extends AbstractChart {
    * and the RectF list index is the point index in that series.
    */
   private Map<Integer, List<ClickableArea>> clickableAreas = new HashMap<Integer, List<ClickableArea>>();
+  
+  private List<ClickableArea> xTextClickableAreas = new LinkedList<ClickableArea>();
   
   private int step = 0;
   private int maxCount = -1;
@@ -255,6 +259,7 @@ public abstract class XYChart extends AbstractChart {
     // 2) We don't need random seeking, only sequential reading/writing, so
     // linked list makes sense
     clickableAreas = new HashMap<Integer, List<ClickableArea>>();
+    xTextClickableAreas.clear();
     
     SortedMap<Double,Double>[] ranges = new SortedMap[sLength];
     for (int i = 0; i < sLength; i++) {
@@ -265,14 +270,13 @@ public abstract class XYChart extends AbstractChart {
     
     for (int i = 0; i < sLength; i++) {
       XYSeries series = mDataset.getSeriesAt(i);
+      SimpleSeriesRenderer seriesRenderer = mRenderer.getSeriesRendererAt(i);
       int scale = series.getScaleNumber();
-      if (series.getItemCount() == 0) {
+      if (series.getItemCount() == 0 || !seriesRenderer.isDisplayChart()) {
         continue;
       }
 
       hasValues = true;
-      SimpleSeriesRenderer seriesRenderer = mRenderer.getSeriesRendererAt(i);
-
       // int originalValuesLength = series.getItemCount();
       // int valuesLength = originalValuesLength;
       // int length = valuesLength * 2;
@@ -762,21 +766,66 @@ if (seriesRenderer.isDisplayChart()) {
     boolean showCustomTextGrid = mRenderer.isShowCustomTextGrid();
     if (showLabels) {
       paint.setColor(mRenderer.getXLabelsColor());
-      for (Double location : xTextLabelLocations) {
+      Double location;
+      int xTextLabelLocationsLength = xTextLabelLocations.length;
+      for (int index = 0 ; index < xTextLabelLocationsLength; index++) {
+        location = xTextLabelLocations[index];
         if (minX <= location && location <= maxX) {
           float xLabel = (float) (left + xPixelsPerUnit * (location.doubleValue() - minX));
           paint.setColor(mRenderer.getXLabelsColor());
-          canvas
-              .drawLine(xLabel, bottom, xLabel, bottom + mRenderer.getLabelsTextSize() / 3, paint);
-          drawText(canvas, mRenderer.getXTextLabel(location), xLabel,
-              bottom + mRenderer.getLabelsTextSize() * 4 / 3, paint, mRenderer.getXLabelsAngle());
+          canvas.drawLine(xLabel, bottom, xLabel, bottom + mRenderer.getLabelsTextSize() / 3, paint);
+          String[] labelLines = mRenderer.getXTextLabel(location).split("\n");
+          String maxLabelLine = "";
+          float yLabelOffset = mRenderer.getLabelsTextSize() * 4 / 3;
+          for (int i=0; i < labelLines.length; i++) {
+        	  drawText(canvas, labelLines[i], xLabel, bottom
+                      + yLabelOffset * (i+1), paint, mRenderer.getXLabelsAngle());
+        	  if (labelLines[i].length() > maxLabelLine.length()) {
+        		  maxLabelLine = labelLines[i];
+        	  }
+          }
+          
+          /** clickable labels **/
+          //getTextBounds buggué sur la taille de chaine comportant des espaces (cf http://code.google.com/p/android/issues/detail?id=7527)
+          // => n'est utilisé que pour récupérer la hauteur du text. Pour la largeur, utilisation de measureText
+          Rect maxLabelLineRect = new Rect();
+          paint.getTextBounds(maxLabelLine, 0, maxLabelLine.length(), maxLabelLineRect);
+          float maxLabelHeight = maxLabelLineRect.height();
+          float maxLabelWidth = paint.measureText(maxLabelLine);
+          /**
+           * ----location-----------> X axis
+           *         |
+           *       ------------------
+           *       |This is a text  |
+           *       |on several lines|
+           *       ------------------
+           *       => xTextClicableAreas  
+           */
+          int selectableBuffer = mRenderer.getSelectableBuffer();
+          //selectableBuffer = 0;
+          RectF rectF = new RectF(xLabel - selectableBuffer, bottom + yLabelOffset - selectableBuffer, 
+        		  xLabel + maxLabelWidth + selectableBuffer, bottom + yLabelOffset * labelLines.length + maxLabelHeight * labelLines.length + selectableBuffer);
+          
+          //Log.d("XTEXT", "xLabel: " + xLabel + " , location: " + location + " (" + getDate(location.longValue()) + ")");
+          double clickableLocation = location.doubleValue();
+          if (mRenderer.isXTextLabelShifted() && (index + 1 < xTextLabelLocationsLength)) {
+        	  clickableLocation = xTextLabelLocations[index + 1];
+          }
+          xTextClickableAreas.add(new ClickableArea(rectF, clickableLocation, -1));
+          //canvas.drawRect(rectF, paint); // debug
+          /****/
+          
           if (showCustomTextGrid) {
-            paint.setColor(mRenderer.getGridColor());
-            canvas.drawLine(xLabel, bottom, xLabel, top, paint);
+        	  paint.setColor(getColorXLine(location));
+              canvas.drawLine(xLabel, bottom, xLabel, top, paint);
           }
         }
       }
     }
+  }
+  
+  protected int getColorXLine(Double location) {
+	  return mRenderer.getGridColor();
   }
 
   // TODO: docs
@@ -849,25 +898,75 @@ if (seriesRenderer.isDisplayChart()) {
   }
 
   public SeriesSelection getSeriesAndPointForScreenCoordinate(final Point screenPoint) {
-    if (clickableAreas != null)
-      for (int seriesIndex = clickableAreas.size() - 1; seriesIndex >= 0; seriesIndex--) {
+    if (clickableAreas != null) {
+      List<Integer> seriesIndexes = new ArrayList<Integer>(clickableAreas.keySet());
+      Collections.sort(seriesIndexes, Collections.reverseOrder());
+      for (Integer seriesIndex : seriesIndexes) {
         // series 0 is drawn first. Then series 1 is drawn on top, and series 2
         // on top of that.
         // we want to know what the user clicked on, so traverse them in the
         // order they appear on the screen.
         int pointIndex = 0;
         if (clickableAreas.get(seriesIndex) != null) {
-          RectF rectangle;
+          RectF rect;
           for (ClickableArea area : clickableAreas.get(seriesIndex)) {
-            rectangle = area.getRect();
-            if (rectangle != null && rectangle.contains(screenPoint.getX(), screenPoint.getY())) {
-              return new SeriesSelection(seriesIndex, pointIndex, area.getX(), area.getY());
+        	rect = area.getRect();
+            if (rect != null && rect.contains(screenPoint.getX(), screenPoint.getY())) {
+              return new SeriesSelection(seriesIndex, pointIndex, area.getX(), area.getY(), rect.centerX(), rect.centerY());
             }
             pointIndex++;
           }
         }
       }
+    }
     return super.getSeriesAndPointForScreenCoordinate(screenPoint);
+  }
+  
+  public List<SeriesSelection> getSeriesAndPointMatchingXValue(final Point screenPoint) {
+	  // At first: try xTextLabel clickableAreas
+	  if (xTextClickableAreas != null) {
+		  RectF rect;
+		  for (ClickableArea xTextClickableArea : xTextClickableAreas) {
+			  rect = xTextClickableArea.getRect();
+			  if (rect != null && rect.contains(screenPoint.getX(), screenPoint.getY())) {
+				  //Log.d("XTEXT", "click on location : " + xTextClickableArea.getX() + " (" + getDate((long) xTextClickableArea.getX())  + ")");
+				  return getSeriesAndPointMatchingXValue(xTextClickableArea.getX());
+			  }
+		  }
+	  }
+	  // if nothing found on xTextLabel clickableAreas, then try regular series clickableAreas
+	  List<SeriesSelection> list = new ArrayList<SeriesSelection>();
+	  SeriesSelection selection = getSeriesAndPointForScreenCoordinate(screenPoint);
+	  if (selection != null) {
+		  list.add(selection);
+	  }
+	  return list;
+  }
+  
+  public List<SeriesSelection> getSeriesAndPointMatchingXValue(final double xValue) {
+	  List<SeriesSelection> list = new ArrayList<SeriesSelection>();
+	  if (clickableAreas != null) {
+		  List<Integer> seriesIndexes = new ArrayList<Integer>(clickableAreas.keySet());
+	      Collections.sort(seriesIndexes, Collections.reverseOrder());
+	      for (Integer seriesIndex : seriesIndexes) {
+	        // series 0 is drawn first. Then series 1 is drawn on top, and series 2
+	        // on top of that.
+	        // we want to know what the user clicked on, so traverse them in the
+	        // order they appear on the screen.
+	        int pointIndex = 0;
+	        if (clickableAreas.get(seriesIndex) != null) {
+	          RectF rect;
+	          for (ClickableArea area : clickableAreas.get(seriesIndex)) {
+	        	rect = area.getRect();
+	            if (area.getX() == xValue) {
+	            	list.add(new SeriesSelection(seriesIndex, pointIndex, area.getX(), area.getY(), rect.centerX(), rect.centerY()));
+	            }
+	            pointIndex++;
+	          }
+	        }
+	      }
+	  }
+	  return list;
   }
 
   /**

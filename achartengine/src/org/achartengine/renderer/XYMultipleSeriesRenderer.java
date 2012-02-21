@@ -18,6 +18,7 @@ package org.achartengine.renderer;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.achartengine.util.MathHelper;
 
@@ -49,7 +50,7 @@ public class XYMultipleSeriesRenderer extends DefaultRenderer {
   /** The current orientation of the chart. */
   private Orientation mOrientation = Orientation.HORIZONTAL;
   /** The X axis text labels. */
-  private Map<Double, String> mXTextLabels = new HashMap<Double, String>();
+  private Map<Double, String> mXTextLabels = new TreeMap<Double, String>();
   /** The Y axis text labels. */
   private Map<Integer, Map<Double, String>> mYTextLabels = new LinkedHashMap<Integer, Map<Double, String>>();
   /** A flag for enabling or not the pan on the X axis. */
@@ -91,6 +92,11 @@ public class XYMultipleSeriesRenderer extends DefaultRenderer {
   /** The Y axis labels color. */
   private int[] mYLabelsColor = new int[] { TEXT_COLOR };
 
+  private boolean showWeekSeparator = false;
+  private int weekColor = Color.RED;
+  
+  private boolean xTextLabelShifted = false;
+  
   /**
    * An enum for the XY chart orientation of the X axis.
    */
@@ -1065,5 +1071,29 @@ public class XYMultipleSeriesRenderer extends DefaultRenderer {
   public int getScalesCount() {
     return scalesCount;
   }
+
+public int getWeekColor() {
+	return weekColor;
+}
+
+public void setWeekColor(int weekColor) {
+	this.weekColor = weekColor;
+}
+
+public boolean isShowWeekSeparator() {
+	return showWeekSeparator;
+}
+
+public void setShowWeekSeparator(boolean showWeekSeparator) {
+	this.showWeekSeparator = showWeekSeparator;
+}
+
+public boolean isXTextLabelShifted() {
+	return xTextLabelShifted;
+}
+
+public void setXTextLabelShifted(boolean xTextLabelShifted) {
+	this.xTextLabelShifted = xTextLabelShifted;
+}
 
 }
