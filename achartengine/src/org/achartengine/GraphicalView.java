@@ -41,6 +41,7 @@ import android.graphics.RectF;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -83,7 +84,38 @@ public class GraphicalView extends View {
   /** The old y coordinate. */
   private float oldY;
 
-  /**
+    public GraphicalView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        AbstractChart chart = createInitialChart();
+        init(chart);
+    }
+
+    public GraphicalView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        AbstractChart chart = createInitialChart();
+        init(chart);
+    }
+
+    public GraphicalView(Context context) {
+        super(context);
+        AbstractChart chart = createInitialChart();
+        init(chart);
+    }
+
+    /**
+     * Creates an initial chart. Required by constructors invoked by the XML
+     * inflater. Override this method if when you extend {@link GraphicalView},
+     * which does not support inflation thus throws a NullPointerException.
+     * 
+     * @return chart
+     */
+    protected AbstractChart createInitialChart() {
+        // this doesn't have an initial chart
+        throw new NullPointerException(
+                "createInitialChart() should be overriden to use XML!");
+    }
+
+/**
    * Creates a new graphical view.
    * 
    * @param context the context
@@ -91,6 +123,10 @@ public class GraphicalView extends View {
    */
   public GraphicalView(Context context, AbstractChart chart) {
     super(context);
+    init(chart);
+  }
+
+private void init(AbstractChart chart) {
     mChart = chart;
     mHandler = new Handler();
     if (mChart instanceof XYChart) {
@@ -128,8 +164,8 @@ public class GraphicalView extends View {
     } else {
       mTouchHandler = new TouchHandler(this, mChart);
     }
-  }
-  
+}
+
   public void overrideXYMarginsColor(int color) {
 		// hack du projet initial achartengine pour simuler que la zone de
 		// dessin ne s'étende pas au delà des axes des abscisses et des
